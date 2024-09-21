@@ -88,7 +88,7 @@ def poll_for_updates(page):
         current_bookings_count = len(fetch_bookings_with_usernames())
         
         if current_bookings_count > previous_bookings_count:
-            pygame.mixer.music.load("gas/assets/ring.mp3")  # Use the absolute path
+            pygame.mixer.music.load("assets/ring.mp3")  # Use the absolute path
             pygame.mixer.music.play()  # Play the sound
         
         previous_bookings_count = current_bookings_count
