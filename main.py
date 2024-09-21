@@ -1,8 +1,11 @@
+import os
+
+os.environ["SDL_AUDIODRIVER"] = "dummy"
+import pygame
 import flet as ft
 import sqlitecloud
 import threading
 import time
-import pygame
 
 # Initialize pygame mixer
 pygame.mixer.init()
@@ -106,7 +109,7 @@ def poll_for_updates(page):
         previous_bookings_count = current_bookings_count
 
         show_bookings(page)
-        time.sleep(20)  # Poll every 10 seconds
+        time.sleep(10)  # Poll every 10 seconds
 
 
 def main(page: ft.Page):
