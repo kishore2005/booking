@@ -7,8 +7,11 @@ import pygame
 # Initialize pygame mixer
 pygame.mixer.init()
 
+
 def fetch_bookings_with_usernames():
-    conn = sqlitecloud.connect("sqlitecloud://ce3yvllesk.sqlite.cloud:8860/gas?apikey=kOt8yvfwRbBFka2FXT1Q1ybJKaDEtzTya3SWEGzFbvE")
+    conn = sqlitecloud.connect(
+        "sqlitecloud://ce3yvllesk.sqlite.cloud:8860/gas?apikey=kOt8yvfwRbBFka2FXT1Q1ybJKaDEtzTya3SWEGzFbvE"
+    )
     cursor = conn.cursor()
     cursor.execute('''
         SELECT bookings.id, users.username, products.name, bookings.status
@@ -20,12 +23,17 @@ def fetch_bookings_with_usernames():
     conn.close()
     return bookings
 
+
 def update_booking_status(booking_id, status):
-    conn = sqlitecloud.connect("sqlitecloud://ce3yvllesk.sqlite.cloud:8860/gas?apikey=kOt8yvfwRbBFka2FXT1Q1ybJKaDEtzTya3SWEGzFbvE")
+    conn = sqlitecloud.connect(
+        "sqlitecloud://ce3yvllesk.sqlite.cloud:8860/gas?apikey=kOt8yvfwRbBFka2FXT1Q1ybJKaDEtzTya3SWEGzFbvE"
+    )
     cursor = conn.cursor()
-    cursor.execute('UPDATE bookings SET status = ? WHERE id = ?', (status, booking_id))
+    cursor.execute('UPDATE bookings SET status = ? WHERE id = ?',
+                   (status, booking_id))
     conn.commit()
     conn.close()
+
 
 def show_bookings(page):
     bookings = fetch_bookings_with_usernames()
@@ -37,7 +45,8 @@ def show_bookings(page):
         def on_status_change(e, booking_id=booking_id):
             new_status = e.control.value
             update_booking_status(booking_id, new_status)
-            page.snack_bar = ft.SnackBar(ft.Text(f"Status updated to {new_status}"), open=True)
+            page.snack_bar = ft.SnackBar(
+                ft.Text(f"Status updated to {new_status}"), open=True)
 
         status_dropdown = ft.Dropdown(
             value=status,
@@ -46,13 +55,15 @@ def show_bookings(page):
                 ft.dropdown.Option("Out for Delivery"),
                 ft.dropdown.Option("Delivered")
             ],
-            on_change=on_status_change
-        )
+            on_change=on_status_change)
 
         booking_details = [
-            ft.Text(f"Username: {username}", size=20, weight=ft.FontWeight.BOLD),
-            ft.Text(f"Product: {product_name}", size=20, weight=ft.FontWeight.BOLD),
-            status_dropdown
+            ft.Text(f"Username: {username}",
+                    size=20,
+                    weight=ft.FontWeight.BOLD),
+            ft.Text(f"Product: {product_name}",
+                    size=20,
+                    weight=ft.FontWeight.BOLD), status_dropdown
         ]
 
         booking_container = ft.Container(
@@ -81,38 +92,37 @@ def show_bookings(page):
     page.clean()  # Clear the page before adding new content
     page.add(scrollable_column)
 
+
 def poll_for_updates(page):
     previous_bookings_count = len(fetch_bookings_with_usernames())
-    
+
     while True:
         current_bookings_count = len(fetch_bookings_with_usernames())
-        
+
         if current_bookings_count > previous_bookings_count:
             pygame.mixer.music.load("assets/ring.mp3")  # Use the absolute path
             pygame.mixer.music.play()  # Play the sound
-        
+
         previous_bookings_count = current_bookings_count
-        
+
         show_bookings(page)
-        time.sleep(10)  # Poll every 10 seconds
+        time.sleep(20)  # Poll every 10 seconds
+
 
 def main(page: ft.Page):
     page.title = "Booking Display"
     page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
     page.vertical_alignment = ft.MainAxisAlignment.CENTER
 
-    page.window.width = 800
-    page.window.height = 600
-
-    page.appbar = ft.AppBar(
-        title=ft.Text("Bookings"),
-        center_title=True,
-        bgcolor="#000000"
-    )
+    page.appbar = ft.AppBar(title=ft.Text("Bookings"),
+                            center_title=True,
+                            bgcolor="#000000")
 
     show_bookings(page)
 
     # Start the polling mechanism
-    threading.Thread(target=poll_for_updates, args=(page,), daemon=True).start()
+    threading.Thread(target=poll_for_updates, args=(page, ),
+                     daemon=True).start()
+
 
 ft.app(target=main, view=ft.AppView.WEB_BROWSER)
