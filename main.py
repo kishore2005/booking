@@ -1,14 +1,10 @@
-import os
-
-os.environ["SDL_AUDIODRIVER"] = "dummy"
-import pygame
 import flet as ft
 import sqlitecloud
 import threading
 import time
+import pyperclip
 
 # Initialize pygame mixer
-pygame.mixer.init()
 
 
 def fetch_bookings_with_usernames():
@@ -17,7 +13,7 @@ def fetch_bookings_with_usernames():
     )
     cursor = conn.cursor()
     cursor.execute('''
-        SELECT bookings.id, users.username, products.name, bookings.status
+        SELECT bookings.id, users.username, products.name, bookings.status, bookings.geolocation
         FROM bookings
         JOIN users ON bookings.user_id = users.id
         JOIN products ON bookings.product_id = products.id
@@ -43,13 +39,19 @@ def show_bookings(page):
     booking_containers = []
 
     for booking in bookings:
-        booking_id, username, product_name, status = booking
+        booking_id, username, product_name, status, geolocation = booking
 
         def on_status_change(e, booking_id=booking_id):
             new_status = e.control.value
             update_booking_status(booking_id, new_status)
             page.snack_bar = ft.SnackBar(
                 ft.Text(f"Status updated to {new_status}"), open=True)
+
+        def copy_geolocation(e, geolocation=geolocation):
+            print(f"Copying geolocation: {geolocation}")  # Debugging statement
+            pyperclip.copy(geolocation)
+            page.snack_bar = ft.SnackBar(
+                ft.Text("Geolocation copied to clipboard"), open=True)
 
         status_dropdown = ft.Dropdown(
             value=status,
@@ -66,7 +68,13 @@ def show_bookings(page):
                     weight=ft.FontWeight.BOLD),
             ft.Text(f"Product: {product_name}",
                     size=20,
-                    weight=ft.FontWeight.BOLD), status_dropdown
+                    weight=ft.FontWeight.BOLD),
+            ft.Row(controls=[
+                ft.Text(f"Geolocation: {geolocation}",
+                        size=20,
+                        weight=ft.FontWeight.BOLD),
+                ft.IconButton(icon=ft.icons.COPY, on_click=copy_geolocation)
+            ]), status_dropdown
         ]
 
         booking_container = ft.Container(
@@ -102,10 +110,6 @@ def poll_for_updates(page):
     while True:
         current_bookings_count = len(fetch_bookings_with_usernames())
 
-        if current_bookings_count > previous_bookings_count:
-            pygame.mixer.music.load("assets/ring.mp3")  # Use the absolute path
-            pygame.mixer.music.play()  # Play the sound
-
         previous_bookings_count = current_bookings_count
 
         show_bookings(page)
@@ -122,6 +126,15 @@ def main(page: ft.Page):
                             bgcolor="#000000")
 
     show_bookings(page)
+
+    # Simplified test for clipboard functionality
+    def copy_text(e):
+        print("Copying text to clipboard")  # Debugging statement
+        pyperclip.copy("Test text")
+        page.snack_bar = ft.SnackBar(ft.Text("Text copied to clipboard"),
+                                     open=True)
+
+    page.add(ft.IconButton(icon=ft.icons.COPY, on_click=copy_text))
 
     # Start the polling mechanism
     threading.Thread(target=poll_for_updates, args=(page, ),
