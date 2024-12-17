@@ -1,2 +1,5 @@
-flet==0.22.*
+fastapi
+uvicorn
+pydantic
 sqlitecloud
+logging
